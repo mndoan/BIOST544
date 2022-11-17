@@ -12,9 +12,9 @@ output: pdf_document
 | 2. Setup
 |    2.1 Load packages and data
 |    2.2 Data cleaning
-| 3. Exploratory data analysis
+| 3. Initial data analysis
 |    3.1 Section
-| 4. Model selection
+| 4. Main data analysis
 |    4.1 Section
 | x. Results and interpretations?
 
@@ -22,11 +22,17 @@ output: pdf_document
 ## 1.1 Data description
 ## 1.2 Analysis questions and aims
 ## 1.3 Analysis approach
+
 # 2. Setup
 ## 2.1 Loading packages and data
+```{r message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+data <- read.csv("./data/Life Expectancy Data.csv")
+```
+
 ## 2.2 Cleaning data
+
 # Results and interpretations
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
-```
+
 
