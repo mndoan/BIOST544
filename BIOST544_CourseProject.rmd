@@ -44,12 +44,32 @@ The dataset aims to answer the following questions:
 # 2. Setup
 ## 2.1 Loading packages and data
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+# Load packages
 library(tidyverse)
+library(janitor) # Data cleaning package
+library(stats) # General statistics package
+#library(gam) # Generalized Additive Models package
+#library(MKinfer) # To run bootstrap tests 
+#library(energy) # To run distance covariance or correlation tests
+#library(car) # Applied regression package
+#library(glmnet) # To run lasso penalized logistic regression
+#library(caret) # Classification and regression training package
+#library(ranger) # Random Forests package
+library(VIM) # Visualization and Imputation of Missing Values package
+
+# Load data
 data <- read.csv("./data/Life Expectancy Data.csv")
 ```
 
 ## 2.2 Cleaning data
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+# Clean up variable/column names
+data <- data %>%
+  clean_names()
+
+# Check for any observations/rows with missing data
+nrow(data) - sum(complete.cases(data))    # number of rows with missing values
+missing_vals <- which(complete.cases(data) == FALSE)    # rows with missing data
 
 ```
 
