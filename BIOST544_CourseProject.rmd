@@ -49,6 +49,7 @@ The dataset aims to answer the following questions:
 # 2. Setup
 ## 2.1 Loading packages and data
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+
 # Load packages
 library(tidyverse)
 library(janitor) # Data cleaning package
@@ -63,21 +64,36 @@ library(naniar)
 #library(ranger) # Random Forests package
 library(VIM) # Visualization and Imputation of Missing Values package
 
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
 # Load data
 data <- read.csv("./data/Life Expectancy Data.csv")
+
+str(data)
+
 ```
 
-## 2.2 Cleaning data and selecting variables of interest
+## 2.2 Cleaning and preparing data for analysis
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-# Clean up variable/column names
+
 data <- data %>%
-  clean_names() %>%
-  select(c(life_expectancy, alcohol, hepatitis_b, measles, polio, diphtheria, hiv_aids, schooling))
+  clean_names() %>% 
+  select(-c(country, year)) %>% 
+  mutate(status = recode(factor(status, levels = c("Developed", "Developing")),
+                         "Developed" = 1, "Developing" = 0)) %>% 
+  mutate_all(as.numeric)
+
+str(data)
 
 ```
 
-## 2.3 Handling missing data
+# 3. Initial exploration of data
+
+## 3.1 Handling missing data in predictor variables
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+
 # Check for any observations/rows with missing data
 sum(complete.cases(data) == FALSE) / nrow(data)    # proportion of missing data
 missing_vals <- which(complete.cases(data) == FALSE)    # rows with missing data
@@ -101,6 +117,12 @@ gg_miss_var(data_imputed, show_pct = TRUE)
 
 ```
 
+## 3.2 Looking at possible associations or trends
+```{r message=FALSE, warning=FALSE, include=FALSE}
+
+
+
+```
 
 # Results and interpretations
 ```{r message=FALSE, warning=FALSE, include=FALSE}
