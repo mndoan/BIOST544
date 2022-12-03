@@ -2,7 +2,11 @@
 title: "BIOST 544A Course Project: WHO Life Expectancy"
 author: "My-Anh Doan and Katie Denecke"
 date: "`r Sys.Date()`"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
 ---
 
 | 1. Introduction
@@ -68,7 +72,7 @@ data <- read.csv("./data/Life Expectancy Data.csv")
 # Clean up variable/column names
 data <- data %>%
   clean_names() %>%
-  select()
+  select(c(life_expectancy, alcohol, hepatitis_b, measles, polio, diphtheria, hiv_aids, schooling))
 
 ```
 
@@ -80,6 +84,21 @@ missing_vals <- which(complete.cases(data) == FALSE)    # rows with missing data
 
 # Visualization of missing values
 gg_miss_var(data, show_pct = TRUE)
+
+# Impute missing values in covariates
+library(missForest)
+set.seed(1)
+data_imputed_covars <- missForest(xmis = data[ , -1], maxiter = 50)$ximp
+
+data_imputed <- cbind(data[ , 1], data_imputed_covars)
+colnames(data_imputed)[1] = "life_expectancy"
+
+# Plot missingness again to validate imputation results
+gg_miss_var(data_imputed, show_pct = TRUE)
+
+# Confirm the proportion of missingness in the response variable
+100 * sum(is.na(data$life_expectancy)) / nrow(data) # 0.3404% missing; value matches gg_miss_var plot
+
 ```
 
 
