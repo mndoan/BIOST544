@@ -22,10 +22,11 @@ output: pdf_document
 [???]Short intro about aims of this report and the data set used for this project.
 
 ## 1.1 Data description
-[???]List the variables in the dataset in a table
+[???]List the variables of interest in the dataset in a table
+What is the response variable. What are the predictors
 
 ## 1.2 Analysis questions and aims
-The dataset aims to answer the following questions:
+The dataset aims to answer the following questions: 
 
 1. Does various predicting factors which has been chosen initially really affect the Life expectancy? What are the predicting variables actually affecting the life expectancy?
 2. Should a country having a lower life expectancy value (<65) increase its healthcare expenditure in order to improve its average lifespan?
@@ -48,6 +49,7 @@ The dataset aims to answer the following questions:
 library(tidyverse)
 library(janitor) # Data cleaning package
 library(stats) # General statistics package
+library(naniar)
 #library(gam) # Generalized Additive Models package
 #library(MKinfer) # To run bootstrap tests 
 #library(energy) # To run distance covariance or correlation tests
@@ -61,17 +63,25 @@ library(VIM) # Visualization and Imputation of Missing Values package
 data <- read.csv("./data/Life Expectancy Data.csv")
 ```
 
-## 2.2 Cleaning data
+## 2.2 Cleaning data and selecting variables of interest
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 # Clean up variable/column names
 data <- data %>%
-  clean_names()
-
-# Check for any observations/rows with missing data
-nrow(data) - sum(complete.cases(data))    # number of rows with missing values
-missing_vals <- which(complete.cases(data) == FALSE)    # rows with missing data
+  clean_names() %>%
+  select()
 
 ```
+
+## 2.3 Handling missing data
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Check for any observations/rows with missing data
+sum(complete.cases(data) == FALSE) / nrow(data)    # proportion of missing data
+missing_vals <- which(complete.cases(data) == FALSE)    # rows with missing data
+
+# Visualization of missing values
+gg_miss_var(data, show_pct = TRUE)
+```
+
 
 # Results and interpretations
 ```{r message=FALSE, warning=FALSE, include=FALSE}
