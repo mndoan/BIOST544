@@ -53,9 +53,7 @@ data <- read.csv("./data/Life Expectancy Data.csv")
 
 data <- data %>%
   clean_names() %>% 
-  select(-c(country, year)) %>% 
-  mutate(status = recode(factor(status, levels = c("Developed", "Developing")),
-                         "Developed" = 1, "Developing" = 0)) %>% 
+  select(life_expectancy, alcohol, hepatitis_b, polio, diphtheria, hiv_aids) %>% 
   mutate_all(as.numeric)
 
 str(data)
