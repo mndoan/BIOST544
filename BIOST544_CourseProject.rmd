@@ -33,50 +33,23 @@ What is the response variable. What are the predictors
 The dataset aims to answer the following questions: 
 
 1. Does various predicting factors which has been chosen initially really affect the Life expectancy? What are the predicting variables actually affecting the life expectancy?
-2. Should a country having a lower life expectancy value (<65) increase its healthcare expenditure in order to improve its average lifespan?
-3. How does Infant and Adult mortality rates affect life expectancy?
+
 4. Does Life Expectancy has positive or negative correlation with eating habits, lifestyle, exercise, smoking, drinking alcohol etc.
 5. What is the impact of schooling on the lifespan of humans?
 6. Does Life Expectancy have positive or negative relationship with drinking alcohol?
 7. Do densely populated countries tend to have lower life expectancy?
 8. What is the impact of Immunization coverage on life Expectancy?
 
-[???]Include questions that we want to answer if we have any.
-
 ## 1.3 Analysis approach
 [???]Describe the proposed approach for the analysis. What tests and techniques are we using?
 
-# 2. Setup
-## 2.1 Loading packages and data
+# 2. Load, clean, and prepare data for analysis
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-
-# Load packages
 library(tidyverse)
 library(janitor) # Data cleaning package
-library(stats) # General statistics package
-library(naniar)
-#library(gam) # Generalized Additive Models package
-#library(MKinfer) # To run bootstrap tests 
-#library(energy) # To run distance covariance or correlation tests
-#library(car) # Applied regression package
-#library(glmnet) # To run lasso penalized logistic regression
-#library(caret) # Classification and regression training package
-#library(ranger) # Random Forests package
-library(VIM) # Visualization and Imputation of Missing Values package
-
-```
-
-```{r message=FALSE, warning=FALSE, include=FALSE}
 
 # Load data
 data <- read.csv("./data/Life Expectancy Data.csv")
-
-str(data)
-
-```
-
-## 2.2 Cleaning and preparing data for analysis
-```{r message=FALSE, warning=FALSE, include=FALSE}
 
 data <- data %>%
   clean_names() %>% 
@@ -86,13 +59,14 @@ data <- data %>%
   mutate_all(as.numeric)
 
 str(data)
-
 ```
 
 # 3. Initial exploration of data
 
 ## 3.1 Handling missing data in predictor variables
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+library(naniar)
+library(missForest)
 
 # Check for any observations/rows with missing data
 sum(complete.cases(data) == FALSE) / nrow(data)    # proportion of missing data
@@ -102,11 +76,12 @@ missing_vals <- which(complete.cases(data) == FALSE)    # rows with missing data
 gg_miss_var(data, show_pct = TRUE)
 
 # Impute missing values in covariates
-library(missForest)
-set.seed(1)
-data_imputed_covars <- missForest(xmis = data[ , -1], maxiter = 50)$ximp
 
-data_imputed <- cbind(data[ , 1], data_imputed_covars)
+set.seed(1001)
+data_imputed_covars <- missForest(xmis = subset(data, select = -c(life_expectancy)),
+                                  maxiter = 50)$ximp
+
+data_imputed <- cbind(data$life_expectancy, data_imputed_covars)
 colnames(data_imputed)[1] = "life_expectancy"
 
 # Plot missingness again to validate imputation results
@@ -114,14 +89,32 @@ gg_miss_var(data_imputed, show_pct = TRUE)
 
 # Confirm the proportion of missingness in the response variable
 100 * sum(is.na(data$life_expectancy)) / nrow(data) # 0.3404% missing; value matches gg_miss_var plot
-
 ```
 
-## 3.2 Looking at possible associations or trends
+## 3.2 Linear regression model fitting
 ```{r message=FALSE, warning=FALSE, include=FALSE}
+library(car)
 
+lm_all <- lm(life_expectancy ~ ., data = data_imputed)
+summary(lm_all)
+vif(lm_all)
 
+# Perform stepwise forward selection using AIC as selection criteria
+lm_intercept_only <- lm(life_expectancy ~ 1 , data = data_imputed)
+summary(lm_intercept_only)
+  
+forward_AIC <- step(lm_intercept_only, scope = formula(lm_all),
+                    direction = "forward", trace = 0, k = 2)
+forward_AIC$anova
+forward_AIC$coefficients
 
+# Perform stepwise forward selection using BIC as selction criteria
+forward_BIC <- step(lm_intercept_only, scope = formula(lm_all),
+                    direction = "forward", trace = 0, k = log(nrow(data_imputed)))
+forward_BIC$anova
+forward_BIC$coefficients
+
+anova(forward_AIC, lm_all)
 ```
 
 # Results and interpretations
