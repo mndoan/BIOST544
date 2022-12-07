@@ -26,18 +26,22 @@ editor_options:
 [???]Short intro about aims of this report and the data set used for this project.
 
 ## 1.1 Data description
-[???]List the variables of interest in the dataset in a table
-What is the response variable. What are the predictors
+Variable | Type | Description
+-------- | ---- | ----------- 
+Life expectancy | Response | Life expectancy in age
+Alcohol | Predictor | Alcohol consumption (liters of pure alcohol; per capita)
+Hepatitis B | Predictor | Hepatitis B (HepB) immunization coverage among 1-year-olds (%)
+Polio | Predictor | Polio immunization coverage among 1-year-olds (%)
+Diphtheria | Predictor | TDAP immunization coverage among 1-year-olds (%)
+HIV/AIDS | Predictor | HIV/AIDS deaths per 1000 live births (0-4 years)
 
 ## 1.2 Analysis questions and aims
 The dataset aims to answer the following questions: 
 
 1. Does various predicting factors which has been chosen initially really affect the Life expectancy? What are the predicting variables actually affecting the life expectancy?
 
-4. Does Life Expectancy has positive or negative correlation with eating habits, lifestyle, exercise, smoking, drinking alcohol etc.
-5. What is the impact of schooling on the lifespan of humans?
 6. Does Life Expectancy have positive or negative relationship with drinking alcohol?
-7. Do densely populated countries tend to have lower life expectancy?
+
 8. What is the impact of Immunization coverage on life Expectancy?
 
 ## 1.3 Analysis approach
@@ -89,16 +93,28 @@ gg_miss_var(data_imputed, show_pct = TRUE)
 100 * sum(is.na(data$life_expectancy)) / nrow(data) # 0.3404% missing; value matches gg_miss_var plot
 ```
 
-## 3.2 Linear regression model fitting
+## 3.2 Train-test split dataset
+``` {r, message = FALSE, warning = FALSE}
+set.seed(1)
+rand_sample <- sample(1:nrow(data_imputed),
+                      size = 0.7 * nrow(data_imputed),
+                      replace = FALSE)
+
+training_data <- data_imputed[rand_sample, ]
+test_data <- data_imputed[-rand_sample, ]
+```
+
+## 3.3 Linear regression model fitting
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 library(car)
 
-lm_all <- lm(life_expectancy ~ ., data = data_imputed)
+# Simple linear regression model fitting on training data
+lm_all <- lm(life_expectancy ~ ., data = training_data)
 summary(lm_all)
 vif(lm_all)
 
-# Perform stepwise forward selection using AIC as selection criteria
-lm_intercept_only <- lm(life_expectancy ~ 1 , data = data_imputed)
+# Perform stepwise forward selection using AIC as selection criteria on training data
+lm_intercept_only <- lm(life_expectancy ~ 1 , data = training_data)
 summary(lm_intercept_only)
   
 forward_AIC <- step(lm_intercept_only, scope = formula(lm_all),
@@ -106,13 +122,16 @@ forward_AIC <- step(lm_intercept_only, scope = formula(lm_all),
 forward_AIC$anova
 forward_AIC$coefficients
 
-# Perform stepwise forward selection using BIC as selction criteria
+# Perform stepwise forward selection using BIC as selction criteria on training data
 forward_BIC <- step(lm_intercept_only, scope = formula(lm_all),
-                    direction = "forward", trace = 0, k = log(nrow(data_imputed)))
+                    direction = "forward", trace = 0, k = log(nrow(training_data)))
 forward_BIC$anova
 forward_BIC$coefficients
 
-anova(forward_AIC, lm_all)
+anova(forward_BIC, forward_AIC)
+
+# Polynomial on a variable? 
+
 ```
 
 # Results and interpretations
