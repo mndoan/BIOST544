@@ -10,45 +10,53 @@ editor_options:
 ---
 
 | 1. Introduction
-|    1.1 Data description
+|    1.1 Variable description
 |    1.2 Analysis questions and aims
 |    1.3 Analysis approach
-| 2. Setup
-|    2.1 Load packages and data
-|    2.2 Data cleaning
-| 3. Initial data analysis
-|    3.1 Section
+| 2. Data preparation
+| 3. Initial exploration
+|    3.1 Missing data
+|    3.2 Test/train split
 | 4. Main data analysis
-|    4.1 Section
-| x. Results and interpretations?
+|    4.1 Simple linear regression models
+|        4.1.1 Alcohol
+|        4.1.2 HepB Immunization
+|        4.1.3 Polio Immunization
+|        4.1.4 Diphtheria Immunization
+|        4.1.5 HIV/AIDS Deaths
+|    4.2 Multiple linear regression models
+|        4.2.1 Model fitting
+|        4.2.2 Model selection
+| 5. Final results and interpretations
 
 # 1. Introduction
-[???]Short intro about aims of this report and the data set used for this project.
+This publicly available dataset originates from the Global Health Observatory (GHO) data repository under the World Health Organization (WHO). The dataset contains data on life expectancy, health factors, and economic data (collected by the United Nation website) from 2000 to 2015 for 193 countries. There is a total of 22 attributes in this dataset that can be divided into broad categories related to immunization, mortality, economical, and social factors. The dataset aims to determine significant factors that affect life expectancy.
 
-## 1.1 Data description
-Variable | Type | Description
--------- | ---- | ----------- 
-Life expectancy | Response | Life expectancy in age
-Alcohol | Predictor | Alcohol consumption (liters of pure alcohol; per capita)
-Hepatitis B | Predictor | Hepatitis B (HepB) immunization coverage among 1-year-olds (%)
-Polio | Predictor | Polio immunization coverage among 1-year-olds (%)
-Diphtheria | Predictor | TDAP immunization coverage among 1-year-olds (%)
-HIV/AIDS | Predictor | HIV/AIDS deaths per 1000 live births (0-4 years)
+## 1.1 Variable description
+For this course project, we will only look at five predictor variables in relation to life expectancy: alcohol consumption, HepB immunization, polio immunization, diphtheria immunization, and HIV/AIDS death.
+
+Factor | Variable | Type | Description
+------ | -------- | -----| ----------- 
+Life expectancy | Response | Quantitative | Life expectancy in years
+Alcohol | Predictor | Quantitative | Alcohol consumption (liters of pure alcohol; per capita)
+Hepatitis B | Predictor | Quantitative | Hepatitis B (HepB) immunization coverage among 1-year-olds (%)
+Polio | Predictor | Quantitative | Polio immunization coverage among 1-year-olds (%)
+Diphtheria | Predictor | Quantitative | TDAP immunization coverage among 1-year-olds (%)
+HIV/AIDS | Predictor | Quantitative | Deaths per 1000 live births (0-4 years) caused by HIV/AIDS
 
 ## 1.2 Analysis questions and aims
 The dataset aims to answer the following questions: 
 
-1. Does various predicting factors which has been chosen initially really affect the Life expectancy? What are the predicting variables actually affecting the life expectancy?
+1. Among the five predictors chosen above, which ones are actually significant to life expectancy?
+2. Is there a positive or negative relationship between life expectancy and alcohol consumption?
+3. What is the impact of immunization coverage on life expectancy? Which immunization has a significant impact on life expectancy?
+4. How does HIV/AIDS mortality rate affect life expectancy?
 
-6. Does Life Expectancy have positive or negative relationship with drinking alcohol?
+## 1.3 General analysis approach
+We will use regression tools and techniques to determine the significant predictors of life expectancy. 
 
-8. What is the impact of Immunization coverage on life Expectancy?
-
-## 1.3 Analysis approach
-[???]Describe the proposed approach for the analysis. What tests and techniques are we using?
-
-# 2. Load, clean, and prepare data for analysis
-```{r message=FALSE, warning=FALSE, include=FALSE}
+# 2. Data preparation
+```{r message = FALSE, warning = FALSE}
 library(tidyverse)
 library(janitor) # Data cleaning package
 
@@ -63,10 +71,10 @@ data <- data %>%
 str(data)
 ```
 
-# 3. Initial exploration of data
+# 3. Initial exploration
 
 ## 3.1 Handling missing data in predictor variables
-```{r message=FALSE, warning=FALSE, include=FALSE}
+```{r message = FALSE, warning = FALSE}
 library(naniar)
 library(missForest)
 
@@ -78,19 +86,12 @@ missing_vals <- which(complete.cases(data) == FALSE)    # rows with missing data
 gg_miss_var(data, show_pct = TRUE)
 
 # Impute missing values in covariates
-
 set.seed(1001)
 data_imputed_covars <- missForest(xmis = subset(data, select = -c(life_expectancy)),
                                   maxiter = 50)$ximp
 
 data_imputed <- cbind(data$life_expectancy, data_imputed_covars)
 colnames(data_imputed)[1] = "life_expectancy"
-
-# Plot missingness again to validate imputation results
-gg_miss_var(data_imputed, show_pct = TRUE)
-
-# Confirm the proportion of missingness in the response variable
-100 * sum(is.na(data$life_expectancy)) / nrow(data) # 0.3404% missing; value matches gg_miss_var plot
 ```
 
 ## 3.2 Train-test split dataset
@@ -104,14 +105,96 @@ training_data <- data_imputed[rand_sample, ]
 test_data <- data_imputed[-rand_sample, ]
 ```
 
-## 3.3 Linear regression model fitting
-```{r message=FALSE, warning=FALSE, include=FALSE}
+# 4. Main data analysis
+
+## 4.1 Simple linear regression models
+First, we look at the individual predictors and their effect on life expectancy.
+
+### 4.1.1 Alcohol
+```{r message = FALSE, warning = FALSE}
+plot(x = training_data$alcohol, y = training_data$life_expectancy)
+
+# Fit model to training data
+alc_model_lrm <- glm(as.factor(life_expectancy) ~ alcohol, family = "binomial",
+                     data=training_data)  
+summary(alc_model_lrm)
+
+# Use fitted model on test data
+model_lrm <- glm(as.factor(life_expectancy) ~ alcohol,  family = "binomial",
+                 data=test_data)
+summary(model_lrm)
+```
+
+### 4.1.2 HepB Immunization
+```{r message = FALSE, warning = FALSE}
+plot(x = training_data$hepatitis_b, y = training_data$life_expectancy)
+
+# Fit model to training data
+hepB_model_lrm <- glm(as.factor(life_expectancy) ~ hepatitis_b, family = "binomial",
+                 data=training_data)  
+summary(hepB_model_lrm)
+
+# Use fitted model on test data
+model_lrm <- glm(as.factor(life_expectancy) ~ hepatitis_b,  family = "binomial",
+                 data=test_data)
+summary(model_lrm)
+```
+
+### 4.1.3 Polio Immunization
+```{r message = FALSE, warning = FALSE}
+plot(x = training_data$polio, y = training_data$life_expectancy)
+
+# Fit model to training data
+polio_model_lrm <- glm(as.factor(life_expectancy) ~ polio, family = "binomial",
+                 data=training_data)  
+summary(polio_model_lrm)
+
+# Use fitted model on test data
+model_lrm <- glm(as.factor(life_expectancy) ~ polio,  family = "binomial",
+                 data=test_data)
+summary(model_lrm)
+```
+
+### 4.1.4 Diphtheria Immunization
+```{r message = FALSE, warning = FALSE}
+plot(x = training_data$diphtheria, y = training_data$life_expectancy)
+
+# Fit model to training data
+diph_model_lrm <- glm(as.factor(life_expectancy) ~ diphtheria, family = "binomial",
+                 data=training_data)  
+summary(diph_model_lrm)
+
+# Use fitted model on test data
+model_lrm <- glm(as.factor(life_expectancy) ~ diphtheria,  family = "binomial",
+                 data=test_data)
+summary(model_lrm)
+```
+
+### 4.1.5 HIV/AIDS Deaths
+```{r message = FALSE, warning = FALSE}
+plot(x = training_data$hiv_aids, y = training_data$life_expectancy)
+
+# Fit model to training data
+hiv_model_lrm <- glm(as.factor(life_expectancy) ~ hiv_aids, family = "binomial",
+                 data=training_data)  
+summary(hiv_model_lrm)
+
+# Use fitted model on test data
+model_lrm <- glm(as.factor(life_expectancy) ~ hiv_aids,  family = "binomial",
+                 data=test_data)
+summary(model_lrm)
+```
+
+## 4.2 Multiple linear regression models
+
+### 4.2.1 Model fitting
+```{r message = FALSE, warning = FALSE}
 library(car)
 
-# Simple linear regression model fitting on training data
+# Simple linear regression model using all variables, fitted on training data
 lm_all <- lm(life_expectancy ~ ., data = training_data)
 summary(lm_all)
-vif(lm_all)
+vif(lm_all) # no multicollinearity in our data
 
 # Perform stepwise forward selection using AIC as selection criteria on training data
 lm_intercept_only <- lm(life_expectancy ~ 1 , data = training_data)
@@ -120,23 +203,42 @@ summary(lm_intercept_only)
 forward_AIC <- step(lm_intercept_only, scope = formula(lm_all),
                     direction = "forward", trace = 0, k = 2)
 forward_AIC$anova
-forward_AIC$coefficients
 
 # Perform stepwise forward selection using BIC as selction criteria on training data
 forward_BIC <- step(lm_intercept_only, scope = formula(lm_all),
                     direction = "forward", trace = 0, k = log(nrow(training_data)))
 forward_BIC$anova
+
+forward_AIC$coefficients
 forward_BIC$coefficients
 
 anova(forward_BIC, forward_AIC)
 
-# Polynomial on a variable? 
+# Adding a polynomial on most significant predictor (based on SLR model p-values)
+# Builds upon the stepwise forward selection model using AIC
 
+M2 <- lm(life_expectancy ~ poly(hiv_aids, degree = 4, raw = TRUE) + diphtheria
+         + alcohol + polio + hepatitis_b, data = training_data)
+
+anova(forward_AIC, M2)
 ```
 
-# Results and interpretations
-```{r message=FALSE, warning=FALSE, include=FALSE}
+### 4.2.2 Model selection
+```{r message = FALSE, warning = FALSE}
+anova(forward_AIC, M2)
 
+summary(forward_AIC)
+summary(M2)
+
+# Use fitted model on test data
+test_pred <- predict(M2, newdata = test_data[ , -1])
+test_obs_pred <- cbind(test_data$life_expectancy, test_pred)
+colnames(test_obs_pred) <- c("Observed", "Predicted")
+
+head(test_obs_pred)
 ```
+
+# 5. Results and interpretations
+
 
 
