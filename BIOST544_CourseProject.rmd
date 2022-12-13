@@ -47,10 +47,7 @@ HIV/AIDS | Predictor | Quantitative | Deaths per 1000 live births (0-4 years) ca
 ## 1.2 Analysis questions and aims
 The dataset aims to answer the following questions: 
 
-1. Among the five predictors chosen above, which ones are actually significant to life expectancy?
-2. Is there a positive or negative relationship between life expectancy and alcohol consumption?
-3. What is the impact of immunization coverage on life expectancy? Which immunization has a significant impact on life expectancy?
-4. How does HIV/AIDS mortality rate affect life expectancy?
+Among the five predictors chosen above, which ones are actually significant to life expectancy?
 
 ## 1.3 General analysis approach
 We will use regression tools and techniques to determine the significant predictors of life expectancy. 
@@ -240,5 +237,5 @@ head(test_obs_pred)
 
 # 5. Results and interpretations
 
-
+From the linear regression model that we fit on the data we determined that alcohol, hepatitis b, polio, diphtheria, and HIV/AIDS are all significant predictors of life expectancy. We came to this conclusion as HIV/AIDS had a p-value of 2e-16, diphtheria had a p-value of 3.74e-16, polio had a p-value of 1.91e-15, hepatitis b had a p value of 0.0161, and alcohol had a p value of 2e-16. All of these p-values are less than 0.05 and thus are statistically significant. 
 
